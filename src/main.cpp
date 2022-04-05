@@ -29,6 +29,7 @@ const uint16_t SPEED_OF_SOUND = 343; // µm/µs
 
 //------ Variables:
 
+uint8_t driveFlags = 0x00;
 uint32_t currentMillis = 0UL;
 uint32_t currentMicros = 0UL;
 uint32_t ultrasonicCycleStart = 0UL;
