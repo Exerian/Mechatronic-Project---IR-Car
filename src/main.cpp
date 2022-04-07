@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 #include <Servo.h>
+#include "util/led.h"
 
 //------ Defines:
 
@@ -42,22 +43,10 @@ enum class MotorSpeed:uint8_t {
 	Fast = 255,
 	Reverse = 32,
 };
-namespace Colours {
-enum :uint32_t {
-	Blank = 0x000000,
-	White = 0xFFFFFF,
-	Red = 0xFF0000,
-	Green = 0x00FF00,
-	Blue = 0x0000FF,
-	Orange = 0xFF8000,
-	Yellow = 0xFFFF00,
-};
-}
 
-//------ Functions:
+//------ Forward declaration:
 
-void setLedColour(uint32_t hexColour);
-void setLedColour(uint8_t red, uint8_t green, uint8_t blue);
+void directionCorrection(volatile uint8_t &port);
 
 //------ Classes:
 
@@ -67,11 +56,11 @@ LiquidCrystal lcd(LCD_RS_PIN, LCD_EN_PIN, LCD_DB4_PIN, LCD_DB5_PIN, LCD_DB6_PIN,
 
 void setup() {
 	// Set pins to input and output in data/port register (DDRx):
-	DDRB = 0x38;
+	DDRB |= 0x38;
 	DDRC = 0x0F;
 	DDRD = 0x00 | (1 << US_TRIGGER_PIN); // 0 = Input, 1 = Output
 	// Set default state of pins/ports (PORTx):
-	PORTB = 0x00;
+	PORTB |= 0x00;
 	PORTC = 0x00;
 	PORTD = 0x00;
 
@@ -99,26 +88,44 @@ void loop() {
 		PORTD ^= 0x10;
 		uint32_t distance = pulseIn(US_ECHO_PIN, HIGH);
 		interrupts(); // Re-enable interrupts.
-		distance = (distance * SPEED_OF_SOUND) >> 1; // Calculate the distance the sound travelled.
+		distance = ((distance * SPEED_OF_SOUND) >> 1)/1000; // Calculate the distance the sound travelled to mm.
 		Serial.println(distance);
+
+		if (100 >= distance)
+		{
+			/* code */
+		}
+		
 	}
 	if ((PORTC & 0x30) ^ 0x10) // If white IR sensor reads black, or black IR sensor read white.
 	{
-		Serial.println(F("TEST"));
+		Serial.println(F("Vehicle going off line ..."));
+		if (PORTC & 0x10 && ~PORTC & 0x20) // Both sensors read the opposite of their expected values; turning left.
+		{
+			// Turn right.
+			Serial.println(F("Turning right ->"));
+		}
+		else // Both sensors are reading white; turning right.
+		{
+			// Turn left.
+			Serial.println(F("Turning left <-"));
+		}
+		
 	}
 	
 }
 
-void directionCorrection() {
+void directionCorrection() 
+{
 
 }
 
-// Sets the colour of a RGB led given a hexadecimal 24-bit value (HTML colour).
-void setLedColour(const uint32_t hexColour) {
+void LED::setLedColour(const uint32_t hexColour)
+{
 	setLedColour(hexColour >> 16, hexColour >> 8, hexColour);
 }
-// Sets the colour of a RGB led given an 8-bit value for each RGB colour.
-void setLedColour(const uint8_t red, const uint8_t green, const uint8_t blue) {
+void LED::setLedColour(const uint8_t red, const uint8_t green, const uint8_t blue)
+{
 	analogWrite(LED_RED_PIN, red);
 	analogWrite(LED_GREEN_PIN, green);
 	analogWrite(LED_BLUE_PIN, blue);
