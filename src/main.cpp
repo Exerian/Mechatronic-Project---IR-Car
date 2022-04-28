@@ -1,6 +1,4 @@
 #include <Arduino.h>
-#include <LiquidCrystal.h>
-#include <Servo.h>
 #include "util/led.h"
 
 //------ Defines:
@@ -10,23 +8,18 @@
 //------ Constants:
 
 const uint8_t US_TRIGGER_PIN = 4; // Ultrasonic sensor.
-const uint8_t US_ECHO_PIN = 3;
-const uint8_t IR_SIGNAL_WHITE_PIN = 18; // Infrared sensor.
-const uint8_t IR_SIGNAL_BLACK_PIN = 19;
-const uint8_t MOTOR_FORWARD_PIN = 12; // DC motor.
-const uint8_t MOTOR_REVERSE_PIN = 13;
-const uint8_t MOTOR_POWER_PIN = 11;
-const uint8_t SERVO_POWER_PIN = 5; // Servo motor.
-const uint8_t LCD_RS_PIN = 7;
-const uint8_t LCD_EN_PIN = 2;
-const uint8_t LCD_DB4_PIN = 14;
-const uint8_t LCD_DB5_PIN = 15;
-const uint8_t LCD_DB6_PIN = 16;
-const uint8_t LCD_DB7_PIN = 17;
-const uint8_t LED_RED_PIN = 6;
-const uint8_t LED_GREEN_PIN = 9;
-const uint8_t LED_BLUE_PIN = 10;
-const uint16_t SPEED_OF_SOUND = 343; // µm/µs
+const uint8_t US_ECHO_PIN = 2;
+const uint8_t IR_SIGNAL_RIGHT_PIN = 18; // Infrared sensor.
+const uint8_t IR_SIGNAL_LEFT_PIN = 19;
+const uint8_t MOTOR_RIGHT_FORWARD_PIN = 12; // DC motor.
+const uint8_t MOTOR_RIGHT_REVERSE_PIN = 13;
+const uint8_t MOTOR_RIGHT_POWER_PIN = 11;
+const uint8_t MOTOR_LEFT_FORWARD_PIN = 14;
+const uint8_t MOTOR_LEFT_REVERSE_PIN = 15;
+const uint8_t MOTOR_LEFT_POWER_PIN = 10;
+const uint8_t LED_RED_PIN = 6; // RGB LED.
+const uint8_t LED_GREEN_PIN = 5;
+const uint8_t LED_BLUE_PIN = 3;
 
 //------ Variables:
 
@@ -50,34 +43,28 @@ void directionCorrection(volatile uint8_t &port);
 
 //------ Classes:
 
-Servo servo;
-LiquidCrystal lcd(LCD_RS_PIN, LCD_EN_PIN, LCD_DB4_PIN, LCD_DB5_PIN, LCD_DB6_PIN, LCD_DB7_PIN);
-
 
 void setup() {
-	// Set pins to input and output in data/port register (DDRx):
+	// Set pins in DDRx to input (0) and output (1):
 	DDRB |= 0x38;
-	DDRC = 0x0F;
-	DDRD = 0x00 | (1 << US_TRIGGER_PIN); // 0 = Input, 1 = Output
-	// Set default state of pins/ports (PORTx):
+	DDRC |= 0x0F;
+	DDRD |= 0x00 | (1 << US_TRIGGER_PIN);
+	// Set default state of pins in PORTx:
 	PORTB |= 0x00;
-	PORTC = 0x00;
-	PORTD = 0x00;
-
-	servo.attach(SERVO_POWER_PIN);
-	lcd.begin(16,2);
+	PORTC |= 0x00;
+	PORTD |= 0x00;
 
 	// Starting Serial for troubleshooting.
 	Serial.begin(9600);
 	Serial.println(F("Initialised!")); // Store string in Flash memory.
-	lcd.print(F("Initialised!"));
+	LED::setLedColour(LED::Olive);
 }
 
 void loop() {
 	currentMicros = micros();
 	currentMillis = millis();
 
-	if (!(PORTD & 0x10)) // If US trigger pin is low.
+	if (~PIND & 0x10) // If US trigger pin is low.
 	{
 		PORTD ^= 0x10; // Invert pin.
 		ultrasonicCycleStart = currentMicros;
@@ -85,29 +72,43 @@ void loop() {
 	else if (currentMicros - ultrasonicCycleStart >= 10UL) // If US trigger pin is high and been that for x µs.
 	{
 		noInterrupts(); // Turn off interrupts for read timings.
-		PORTD ^= 0x10;
+		PORTD ^= 0x10; // Alt: (1 << US_TRIGGER_PIN)
 		uint32_t distance = pulseIn(US_ECHO_PIN, HIGH);
 		interrupts(); // Re-enable interrupts.
-		distance = ((distance * SPEED_OF_SOUND) >> 1)/1000; // Calculate the distance the sound travelled to mm.
-		Serial.println(distance);
+		distance = ((distance * 343) >> 1)/1000; // Calculate the distance the sound travelled to mm.
 
 		if (100 >= distance)
 		{
-			/* code */
+			Serial.print(distance);
+			Serial.println(F("mm"));
 		}
 		
 	}
-	if ((PORTC & 0x30) ^ 0x10) // If white IR sensor reads black, or black IR sensor read white.
+
+	if (~PINC & 0x20)
+	{
+		Serial.println(F("Blå"));
+	}
+	if (~PINC & 0x10)
+	{
+		Serial.println(F("Lilla"));
+	}
+	
+	
+
+	if (~PINC & 0x30) // If IR-sensor lose signal.
 	{
 		Serial.println(F("Vehicle going off line ..."));
-		if (PORTC & 0x10 && ~PORTC & 0x20) // Both sensors read the opposite of their expected values; turning left.
+		if (PINC & 0x30 == 0x30) // Both sensors lose signal.
 		{
-			// Turn right.
+			Serial.println(F("Well ... this is awkward."));
+		}
+		else if (PINC & 0x10) // Right sensor lose signal.
+		{
 			Serial.println(F("Turning right ->"));
 		}
-		else // Both sensors are reading white; turning right.
+		else // Otherwise the left sensor lose signal.
 		{
-			// Turn left.
 			Serial.println(F("Turning left <-"));
 		}
 		
