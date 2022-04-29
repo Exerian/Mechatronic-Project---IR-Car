@@ -69,7 +69,7 @@ void loop() {
 		PORTD ^= 0x10; // Invert pin.
 		ultrasonicCycleStart = currentMicros;
 	}
-	else if (currentMicros - ultrasonicCycleStart >= 10UL) // If US trigger pin is high and been that for x µs.
+	else if (currentMicros - ultrasonicCycleStart >= 20UL) // If US trigger pin is high and been that for x µs.
 	{
 		noInterrupts(); // Turn off interrupts for read timings.
 		PORTD ^= 0x10; // Alt: (1 << US_TRIGGER_PIN)

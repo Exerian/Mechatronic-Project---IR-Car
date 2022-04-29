@@ -22,6 +22,7 @@ enum Colours:uint32_t {
 	Fuchsia = 0xFF00FF,
 	Purple = 0x800080,
 	Orange = 0xFF8000,
+	PrussianBlue = 0x232c3f,
 };
 
 // Sets the colour of a RGB led given a hexadecimal 24-bit value (HTML colour).
