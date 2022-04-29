@@ -25,11 +25,15 @@ enum Colours:uint32_t {
 	PrussianBlue = 0x232c3f,
 };
 
-// Sets the colour of a RGB led given a hexadecimal 24-bit value (HTML colour).
-void setLedColour(const uint32_t hexColour);
-void setLedcolour(volatile uint8_t &port, const uint8_t pins, const uint32_t hexColour);
-// Sets the colour of a RGB led given an 8-bit value for each RGB colour.
-void setLedColour(const uint8_t red, const uint8_t green, const uint8_t blue);
+typedef struct led {
+	const uint8_t redPin;
+	const uint8_t greenPin;
+	const uint8_t bluePin;
+	uint32_t previousChange;
+}led_t;
+
+void setLedColour(const led_t led, const uint8_t red, const uint8_t green, const uint8_t blue);
+void setLedColour(const led_t led, const uint32_t hexColour);
 
 uint32_t rgbToHex(const uint8_t red, const uint8_t green, const uint8_t blue);
 
