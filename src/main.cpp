@@ -21,6 +21,8 @@ const uint32_t SPEED_OF_SOUND = 343; // m/s
 
 //------ Variables:
 uint32_t ultrasonicCycleStart = 0UL; //
+uint32_t motorUpdateTime = 0UL;
+uint8_t motorUpdateFlag = 0x00;
 
 //------ Classes:
 G16::led_t led{.redPin = 6, .greenPin = 3, .bluePin = 5}; // RGB Led.
@@ -33,9 +35,9 @@ void setup() {
 	DDRC |= 0x00; // | (1 << MOTOR_LEFT_FORWARD_PIN - 14) | (1 << MOTOR_LEFT_REVERSE_PIN - 14);
 	DDRD |= 0x00 | (1 << US_TRIGGER_PIN) | (1 << led.redPin) | (1 << led.greenPin) | (1 << led.bluePin);
 	// Set default state of pins in PORTx:
-	PORTB = 0x00;
-	PORTC = 0x00 | (1 << IR_SIGNAL_RIGHT_PIN - 14);
-	PORTD = 0x00;
+	PORTB |= 0x00;
+	PORTC |= 0x00 | (1 << IR_SIGNAL_RIGHT_PIN - 14);
+	PORTD |= 0x00;
 
 	// Starting Serial for troubleshooting.
 	Serial.begin(9600);
@@ -61,19 +63,29 @@ void loop() {
 		interrupts(); // Re-enable interrupts.
 		distance = ((distance * 343UL) >> 1)/1000; // Calculate the distance the sound travelled to mm.
 
-		if (100 >= distance && currentMillis - led.previousChange >= 500UL)
+		if (80 >= distance)
 		{
-			Serial.print(distance);
-			Serial.println(F("mm"));
 			G16::setLedColour(led, G16::Red);
-			led.previousChange = currentMillis;
-			motors.forward();
-			motors.write(100,100);
+			motors.stop();
+			motorUpdateFlag |= 0x01;
 		}
-		else if (currentMillis - led.previousChange >= 500UL)
+		else if (160 >= distance)
+		{
+			G16::setLedColour(led, G16::Orange);
+			motors.forward();
+			motors.write(G16::MotorDutyCycle::SLOW, G16::MotorDutyCycle::SLOW);
+		}
+		else if (300 >= distance)
+		{
+			G16::setLedColour(led, G16::Yellow);
+			motors.forward();
+			motors.write(G16::MotorDutyCycle::FAST, G16::MotorDutyCycle::FAST);
+		}
+		else
 		{
 			G16::setLedColour(led, G16::Green);
-			motors.stop();
+			motors.forward();
+			motors.write(G16::MotorDutyCycle::TOP, G16::MotorDutyCycle::TOP);
 		}
 		
 	}

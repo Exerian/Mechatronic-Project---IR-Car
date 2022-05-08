@@ -42,7 +42,7 @@ Motor::Motor(uint8_t forwardLeft, uint8_t reverseLeft, uint8_t forwardRight, uin
     // Set Timer/Counter Control Register for PWM.
     TCCR1A = (1 << COM1A1) | (1 << COM1B1);
     TCCR1B = 0;
-    TCNT1 = 0x00;
+    TCNT1 = 0x00; // Clear/reset timer.
     ICR1 = ICR1_TOP;
     *this->powerLeft = 0x00;
     *this->powerRight = 0x00;
@@ -87,6 +87,8 @@ void Motor::turnRight()
 
 void Motor::write(uint8_t ldc, uint8_t rdc)
 {
+    if (100 < ldc) ldc = 100;
+    if (100 < ldc) rdc = 100;
     *this->powerLeft = mapFromPercent(ldc, LOWEST_OCR, ICR1_TOP);
     *this->powerRight = mapFromPercent(rdc, LOWEST_OCR, ICR1_TOP);
 };
@@ -96,13 +98,5 @@ void Motor::write(MotorDutyCycle left, MotorDutyCycle right)
     *this->powerLeft = mapFromPercent(static_cast<uint8_t>(left), LOWEST_OCR, ICR1_TOP);
     *this->powerRight = mapFromPercent(static_cast<uint8_t>(right), LOWEST_OCR, ICR1_TOP);
 };
-
-/* void Motor::write(uint16_t leftValue, uint16_t rightValue)
-{
-    if (ICR1_TOP < leftValue) leftValue = ICR1_TOP;
-    if (ICR1_TOP < rightValue) rightValue = ICR1_TOP;
-    *this->powerLeft = leftValue;
-    *this->powerRight = rightValue;
-}; */
 
 }

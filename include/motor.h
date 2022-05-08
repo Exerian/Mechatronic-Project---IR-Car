@@ -61,9 +61,21 @@ public:
     void turnLeft();
     // The motors will go in opposite directions; left forward and right in reverse.
     void turnRight();
-    // Write the duty cycle of the motors, an interval of [0,100].
+    
+    /**
+     * @brief Write the duty cycle of the motors, a number in the interval [0,100].
+     * 
+     * @param leftDutyCycle Duty cycle of the left motor.
+     * @param rightDutyCycle Duty cycle of the right motor.
+     */
     void write(uint8_t leftDutyCycle, uint8_t rightDutyCycle);
-    // Write the duty cycle of the motors.
+    
+    /**
+     * @brief Write the duty cycle of the motors.
+     * 
+     * @param left Duty cycle of the left motor.
+     * @param right Duty cycle of the right motor.
+     */
     void write(MotorDutyCycle left, MotorDutyCycle right);
     // Write the speed of the motors.
     // void write(uint16_t leftValue, uint16_t rightValue);
