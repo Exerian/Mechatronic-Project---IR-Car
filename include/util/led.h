@@ -63,7 +63,5 @@ typedef struct led {
 void setLedColour(const led_t &led, const uint8_t red, const uint8_t green, const uint8_t blue);
 void setLedColour(const led_t &led, const Colours &hexColour);
 
-uint32_t rgbToHex(const uint8_t red, const uint8_t green, const uint8_t blue);
-
 }
 #endif

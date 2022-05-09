@@ -5,10 +5,8 @@
 
 namespace G16 {
 
-typedef decltype(&DDRB) DDRPointer_IO8; // Pointer to Data Direction Register.
-typedef decltype(&PORTB) PortPointer_IO8; // Pointer to Port, Pin Output Register.
-typedef decltype(&OCR0A) OCRPointer_IO8; // Pointer to Output Compare Register, 8-bit.
-typedef decltype(&OCR1A) OCRPointer_MEM16; // Pointer to Output Compare Register, 16-bit.
+typedef decltype(&PORTB) IO8_Pointer; // Pointer to 8-bit registers.
+typedef decltype(&OCR1A) MEM16_Pointer; // Pointer to 16-bit registers.
 
 /**
  * @brief Map a value in the interval [0,100] to [outputMin, outputMax].

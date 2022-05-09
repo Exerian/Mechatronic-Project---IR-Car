@@ -58,9 +58,4 @@ void setLedColour(const led_t &led, const Colours &hexColour)
     setLedColour(led, hexColour >> 16, hexColour >> 8, hexColour);
 };
 
-uint32_t rgbToHex(const uint8_t red, const uint8_t green, const uint8_t blue)
-{
-    return (red << 16) | (green << 8) | blue;
-};
-
 }
