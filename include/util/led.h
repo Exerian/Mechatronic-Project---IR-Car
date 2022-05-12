@@ -48,7 +48,12 @@ public:
 	void blink(uint32_t &currentTiming, uint32_t interval = 2000UL);
 	// Update the LED.
 	void update();
-	// Returns the time of the last update.
+	
+	/**
+	 * @brief Get the time of the last update (ms / millis).
+	 * 
+	 * @return uint32_t 
+	 */
 	uint32_t getLastUpdate();
 };
 

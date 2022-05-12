@@ -33,8 +33,20 @@ public:
     PID(int8_t Kp=1, int8_t Ki=0, int8_t Kd=0);
     ~PID();
 
+    /**
+     * @brief 
+     * 
+     * @param error 
+     */
     void update(int8_t error);
+
     int8_t getPID();
+
+    /**
+     * @brief Get the time of the last update (µs / micros).
+     * 
+     * @return uint32_t& 
+     */
     uint32_t &getLastUpdate();
 };
 

@@ -12,9 +12,15 @@ PID::~PID(){};
 
 void PID::update(int8_t error)
 {
-    this->integral += error;
-    this->value = (this->Kp * error) + (this->Ki * this->integral) + (this->Kd * (error - this->error));
-    this->error = error;
+    uint32_t currentTime = micros();
+    uint32_t deltaTime = currentTime - this->lastUpdate; // dt
+    if (deltaTime >= 500UL) // Only run the update every 500µs / 0.5ms
+    {
+        this->integral += error;
+        this->value = (this->Kp * error) + (this->Ki * this->integral) + (this->Kd * (error - this->error)); // Real: Kp * error + Ki * I * dt + Kd * D / dt
+        this->error = error;
+        this->lastUpdate = currentTime;
+    }
 };
 
 int8_t PID::getPID()

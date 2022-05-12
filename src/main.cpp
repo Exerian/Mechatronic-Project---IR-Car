@@ -4,7 +4,7 @@
 #include "controllers/pid.h"
 
 //------ Defines:
-#if 1
+#if 1 // Set to 1 for debug mode, 0 otherwise.
 	#define DEBUG
 #endif
 // Motor flags: xxxx xxxx
@@ -37,21 +37,20 @@ G16::Motor motors{MOTOR_LEFT_FORWARD_PIN, MOTOR_LEFT_REVERSE_PIN, MOTOR_RIGHT_FO
 G16::PID motorPID{5, 3, 3}; // Not tuned.
 
 //------ Timers:
-uint32_t &lastPidUpdate = motorPID.getLastUpdate(); //
-uint32_t ultrasonicCycleStart = 0UL;
+uint32_t ultrasonicCycleStart = 0UL; // Time in µs, when the US sensor triggered.
 uint32_t motorUpdateTime = 0UL;
 
 
 void setup() {
 	// Set output pins in Data Direction Register (DDRx) (input (0) and output (1)):
-	DDRB |= 0x00;
-	DDRC |= 0x00;
-	DDRD |= 0x00 | US_TRIGGER | (1 << led.redPin) | (1 << led.greenPin) | (1 << led.bluePin);
+	DDRB |= 0x00; // DDRB is pin 8 to 13.
+	DDRC |= 0x00; // DDRC is pin 14 to 19.
+	DDRD |= 0x00 | US_TRIGGER | (1 << led.redPin) | (1 << led.greenPin) | (1 << led.bluePin); // DDRD is pin 0 to 7.
 	// Set default state of pins in PORTx:
 	PORTB |= 0x00;
 	PORTC |= 0x00;
 	PORTD |= 0x00;
-	
+
 	motors.initialise();
 
 	#ifdef DEBUG
@@ -87,25 +86,25 @@ void loop() {
 			motors.turnRight();
 			motorUpdateFlag = RETURN;
 		}
-		else if (160 >= distance && !(motorUpdateFlag & FAR == CLOSE))
+		else if (160 >= distance && !((motorUpdateFlag & FAR) == CLOSE))
 		{
 			G16::setLedColour(led, G16::Orange);
 			motors.forward();
-			motors.writeDutyCycle(G16::MotorDutyCycle::SLOW, G16::MotorDutyCycle::SLOW);
+			motors.writeDutyCycle(G16::MotorDutyCycle::SLOW);
 			motorUpdateFlag = (motorUpdateFlag & ~FAR) | CLOSE;
 		}
-		else if (300 >= distance && !(motorUpdateFlag & FAR == MEDIUM))
+		else if (300 >= distance && !((motorUpdateFlag & FAR) == MEDIUM))
 		{
 			G16::setLedColour(led, G16::Yellow);
 			motors.forward();
-			motors.writeDutyCycle(G16::MotorDutyCycle::MEDFAS, G16::MotorDutyCycle::MEDFAS);
+			motors.writeDutyCycle(G16::MotorDutyCycle::MEDFAS);
 			motorUpdateFlag = (motorUpdateFlag & ~FAR) | MEDIUM;
 		}
-		else if (!(motorUpdateFlag & FAR == FAR))
+		else if (!((motorUpdateFlag & FAR) == FAR))
 		{
 			G16::setLedColour(led, G16::Green);
 			motors.forward();
-			motors.writeDutyCycle(G16::MotorDutyCycle::TOP, G16::MotorDutyCycle::TOP);
+			motors.writeDutyCycle(G16::MotorDutyCycle::TOP);
 			motorUpdateFlag |= FAR;
 		}
 		
@@ -138,6 +137,11 @@ void loop() {
 	default:
 		motorPID.update(0);
 		break;
+	}
+
+	if (currentMillis - motorUpdateTime >= 50UL) // Update motor every 50ms.
+	{
+
 	}
 
 	switch (motorUpdateFlag)

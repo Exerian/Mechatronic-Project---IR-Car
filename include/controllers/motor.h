@@ -54,7 +54,7 @@ public:
     ~Motor();
 
     /**
-     * @brief Initialise timers.
+     * @brief Initialise PWM timers.
      * 
      */
     void initialise();
@@ -69,6 +69,15 @@ public:
     void turnLeft();
     // The motors will go in opposite directions; left forward and right in reverse.
     void turnRight();
+
+    /**
+     * @brief Write a value in the interval [0, TOP] to the motors, where TOP is the maximum value set in ICR1.
+     * 
+     *  For any values larger than TOP, TOP is written.
+     * 
+     * @param value 
+     */
+    void write(uint16_t value);
     
     /**
      * @brief Write a value in the interval [0, TOP] to the motors, where TOP is the maximum value set in ICR1.
@@ -88,6 +97,13 @@ public:
      */
     void writeDutyCycle(uint8_t leftDutyCycle, uint8_t rightDutyCycle);
     
+    /**
+     * @brief Write a common duty cycle for the motors.
+     * 
+     * @param duty Duty cycle of the motors.
+     */
+    void writeDutyCycle(MotorDutyCycle duty);
+
     /**
      * @brief Write the duty cycle of the motors.
      * 
@@ -109,6 +125,13 @@ public:
      * @return uint16_t 
      */
     uint16_t getRightPWM();
+
+    /**
+     * @brief Get the mean PWM value of the motors.
+     * 
+     * @return uint16_t 
+     */
+    uint16_t getMeanPWM();
 };
 
 }

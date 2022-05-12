@@ -93,6 +93,11 @@ void Motor::turnRight()
     *this->rightPort = (*this->rightPort & ~forwardRightMask) | reverseRightMask;
 };
 
+void Motor::write(uint16_t value)
+{
+    this->write(value, value);
+};
+
 void Motor::write(uint16_t left, uint16_t right)
 {
     if (ICR1_TOP < left) left = ICR1_TOP;
@@ -113,6 +118,11 @@ void Motor::writeDutyCycle(uint8_t ldc, uint8_t rdc)
     interrupts();
 };
 
+void Motor::writeDutyCycle(MotorDutyCycle duty)
+{
+    this->writeDutyCycle(duty, duty);
+};
+
 void Motor::writeDutyCycle(MotorDutyCycle left, MotorDutyCycle right)
 {
     noInterrupts();
@@ -130,5 +140,10 @@ uint16_t Motor::getRightPWM()
 {
     return *this->rightOCR;
 };
+
+uint16_t Motor::getMeanPWM()
+{
+    return ((*this->leftOCR >> 1) + (*this->rightOCR >> 1));
+}
 
 }
