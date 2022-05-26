@@ -4,7 +4,7 @@
 #include "controllers/pid.h"
 
 //------ Defines:
-#if 1 // Set to 1 for debug mode, 0 otherwise.
+#if 0 // Set to 1 for debug mode, 0 otherwise.
 	#define DEBUG
 #endif
 // Motor flags: xxxx xxxx
@@ -39,6 +39,10 @@ G16::PID motorPID{5, 3, 3}; // Not tuned.
 //------ Timers:
 uint32_t ultrasonicCycleStart = 0UL; // Time in µs, when the US sensor triggered.
 uint32_t motorUpdateTime = 0UL;
+
+//------ Forward declare functions:
+
+void turn180deg();
 
 
 void setup() {
@@ -83,7 +87,7 @@ void loop() {
 		{
 			G16::setLedColour(led, G16::Red);
 			motors.stop();
-			motors.turnRight();
+			turn180deg();
 			motorUpdateFlag = RETURN;
 		}
 		else if (160 >= distance && !((motorUpdateFlag & FAR) == CLOSE))
@@ -114,17 +118,17 @@ void loop() {
 	{
 	case IR_SIGNAL_LEFT:
 		#ifdef DEBUG
-		Serial.println(F("Turning left <-"));
+		Serial.println(F("Correct left <-"));
 		#endif
 
-		motorPID.update(2);
+		motorPID.update(1);
 		break;
 	case IR_SIGNAL_RIGHT:
 		#ifdef DEBUG
-		Serial.println(F("Turning right ->"));
+		Serial.println(F("Correct right ->"));
 		#endif
 
-		motorPID.update(-2);
+		motorPID.update(-1);
 		break;
 	case (IR_SIGNAL_LEFT | IR_SIGNAL_RIGHT):
 		#ifdef DEBUG
@@ -132,7 +136,8 @@ void loop() {
 		#endif
 
 		motors.stop();
-		motorUpdateFlag = STOP;
+		G16::setLedColour(led, G16::Colours::Teal);
+		while (~PIND & RESUME_BUTTON); // Pause until resume button is pressed.
 		break;
 	default:
 		motorPID.update(0);
@@ -141,18 +146,23 @@ void loop() {
 
 	if (currentMillis - motorUpdateTime >= 50UL) // Update motor every 50ms.
 	{
-
+		uint8_t errorCorrection = motorPID.getPID();
+		uint16_t motorPWM = motors.getMeanPWM();
+		motors.write(motorPWM - errorCorrection, motorPWM + errorCorrection);
+		motorUpdateTime = millis();
 	}
+}
 
-	switch (motorUpdateFlag)
-	{
-	case RETURN:
-		break;
-	case STOP:
-		G16::setLedColour(led, G16::Colours::Teal);
-		while (~PIND & RESUME_BUTTON); // Pause until resume button is pressed.
-		break;
-	default:
-		break;
-	}
+void turn180deg()
+{
+	motors.stop(); // Stop motorer.
+	motors.turnLeft();
+	uint32_t startTime = millis();
+	motors.writeDutyCycle(G16::MotorDutyCycle::MEDSLO); // Kjør motorer.
+	while (~PINC & IR_SIGNAL_RIGHT); // Vent til høyre IR sensor bryter linjen.
+	uint32_t timeToBreakLine = millis() - startTime;
+	while (~PINC & IR_SIGNAL_LEFT); // Vent til venstre IR sensor bryter linjen.
+	startTime = millis();
+	while (millis() - startTime < timeToBreakLine); // Vent til venstre IR sensor er like langt over linjen som høyre brukte til å krysse linjen.
+	motors.stop();
 }
